@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -25,13 +26,52 @@ import codechicken.nei.recipe.IRecipeHandler;
 @ParametersAreNonnullByDefault
 public class GregTech implements IAdapter {
 
+    static boolean isPreRecipeRefactor = true;
+
+    private static final Class<?> gtDefault, gtAssLine;
+
+    static {
+        try {
+            Class.forName("gregtech.api.recipe.RecipeMap");
+            isPreRecipeRefactor = false;
+        } catch (ClassNotFoundException e) {}
+
+        Class<?> gtDf = null, gtAL = null;
+        try {
+            gtDf = Class.forName("gregtech.nei.GT_NEI_DefaultHandler");
+            gtAL = Class.forName("gregtech.nei.GT_NEI_AssLineHandler");
+        } catch (ClassNotFoundException e) {}
+        gtDefault = gtDf;
+        gtAssLine = gtAL;
+    }
+
     @Override
     public Set<String> getAllOverlayIdentifier() {
-        return reflectGetRecipeMapNEIName("gregtech.api.util.GT_Recipe$GT_Recipe_Map", "sMappings");
+        if (isPreRecipeRefactor) {
+            return reflectGetRecipeMapNEIName_Old("gregtech.api.util.GT_Recipe$GT_Recipe_Map", "sMappings");
+        }
+        return reflectGetRecipeMapNEIName("gregtech.api.recipe.RecipeMap", "ALL_RECIPE_MAPS");
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected Set<String> reflectGetRecipeMapNEIName(String clz, String staticField) {
+        try {
+            Class<?> gtRecipeMapClz = Class.forName(clz);
+            Field sMappingsField = gtRecipeMapClz.getDeclaredField(staticField);
+            HashMap sMappings = (HashMap) sMappingsField.get(null);
+
+            return (Set<String>) sMappings.keySet()
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            return new HashSet<>();
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Set<String> reflectGetRecipeMapNEIName_Old(String clz, String staticField) {
         try {
             Class<?> gtRecipeMapClz = Class.forName(clz);
             Field sMappingsField = gtRecipeMapClz.getDeclaredField(staticField);
@@ -54,24 +94,9 @@ public class GregTech implements IAdapter {
         }
     }
 
-    private static final Class<?> gtDefault, gtAssLine;
-
-    static {
-        Class<?> gtDf = null;
-        Class<?> gtAL = null;
-        try {
-            gtDf = Class.forName("gregtech.nei.GT_NEI_DefaultHandler");
-            gtAL = Class.forName("gregtech.nei.GT_NEI_AssLineHandler");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        gtDefault = gtDf;
-        gtAssLine = gtAL;
-    }
-
     @Override
     public void handleRecipe(IRecipeHandler recipe, int index, List<Object[]> inputs, List<Object[]> outputs) {
-        if (gtDefault.isInstance(recipe) || gtAssLine.isInstance(recipe)) {
+        if (gtDefault.isInstance(recipe) || (isPreRecipeRefactor && gtAssLine.isInstance(recipe))) {
             handleDefault(recipe, index, inputs, outputs);
         }
     }
