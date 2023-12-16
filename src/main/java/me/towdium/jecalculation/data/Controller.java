@@ -1,7 +1,11 @@
 package me.towdium.jecalculation.data;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -20,7 +24,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 import me.towdium.jecalculation.JecaConfig;
 import me.towdium.jecalculation.JustEnoughCalculation;
 import me.towdium.jecalculation.data.label.labels.LPlaceholder;
-import me.towdium.jecalculation.data.structure.*;
+import me.towdium.jecalculation.data.structure.IRecord;
+import me.towdium.jecalculation.data.structure.Recipe;
+import me.towdium.jecalculation.data.structure.Recipes;
+import me.towdium.jecalculation.data.structure.RecordCraft;
+import me.towdium.jecalculation.data.structure.RecordMath;
+import me.towdium.jecalculation.data.structure.RecordPlayer;
 import me.towdium.jecalculation.polyfill.MethodsReturnNonnullByDefault;
 import me.towdium.jecalculation.utils.Utilities;
 import me.towdium.jecalculation.utils.wrappers.Pair;

@@ -9,7 +9,15 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.IRecipeHandler;
 import cpw.mods.fml.common.Loader;
 import me.towdium.jecalculation.JustEnoughCalculation;
-import me.towdium.jecalculation.nei.adapter.*;
+import me.towdium.jecalculation.nei.adapter.AE2;
+import me.towdium.jecalculation.nei.adapter.Avaritia;
+import me.towdium.jecalculation.nei.adapter.EnderIO;
+import me.towdium.jecalculation.nei.adapter.Forestry;
+import me.towdium.jecalculation.nei.adapter.GTPP;
+import me.towdium.jecalculation.nei.adapter.GregTech;
+import me.towdium.jecalculation.nei.adapter.GregTech6;
+import me.towdium.jecalculation.nei.adapter.IAdapter;
+import me.towdium.jecalculation.nei.adapter.Thaum;
 import me.towdium.jecalculation.utils.Utilities;
 
 public class Adapter {

@@ -1,6 +1,10 @@
 package me.towdium.jecalculation.data.label;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;

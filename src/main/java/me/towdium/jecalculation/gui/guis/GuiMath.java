@@ -16,7 +16,12 @@ import me.towdium.jecalculation.data.structure.RecordMath;
 import me.towdium.jecalculation.data.structure.RecordMath.Operator;
 import me.towdium.jecalculation.data.structure.RecordMath.State;
 import me.towdium.jecalculation.gui.Resource;
-import me.towdium.jecalculation.gui.widgets.*;
+import me.towdium.jecalculation.gui.widgets.WButtonIcon;
+import me.towdium.jecalculation.gui.widgets.WButtonText;
+import me.towdium.jecalculation.gui.widgets.WHelp;
+import me.towdium.jecalculation.gui.widgets.WLcd;
+import me.towdium.jecalculation.gui.widgets.WLine;
+import me.towdium.jecalculation.gui.widgets.WPanel;
 import me.towdium.jecalculation.polyfill.MethodsReturnNonnullByDefault;
 import me.towdium.jecalculation.utils.Utilities;
 

@@ -11,7 +11,12 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import me.towdium.jecalculation.data.label.labels.LPlaceholder;
 import me.towdium.jecalculation.gui.guis.IGui;
-import me.towdium.jecalculation.gui.widgets.*;
+import me.towdium.jecalculation.gui.widgets.WButtonIcon;
+import me.towdium.jecalculation.gui.widgets.WIcon;
+import me.towdium.jecalculation.gui.widgets.WLabelScroll;
+import me.towdium.jecalculation.gui.widgets.WLine;
+import me.towdium.jecalculation.gui.widgets.WSearch;
+import me.towdium.jecalculation.gui.widgets.WTextField;
 import me.towdium.jecalculation.polyfill.MethodsReturnNonnullByDefault;
 
 /**

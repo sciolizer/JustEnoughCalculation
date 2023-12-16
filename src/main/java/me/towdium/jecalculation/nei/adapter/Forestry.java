@@ -14,7 +14,14 @@ import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.IRecipeHandler;
 import forestry.core.recipes.nei.PositionedFluidTank;
 import forestry.core.recipes.nei.RecipeHandlerBase;
-import forestry.factory.recipes.nei.*;
+import forestry.factory.recipes.nei.NEIHandlerBottler;
+import forestry.factory.recipes.nei.NEIHandlerCarpenter;
+import forestry.factory.recipes.nei.NEIHandlerCentrifuge;
+import forestry.factory.recipes.nei.NEIHandlerFabricator;
+import forestry.factory.recipes.nei.NEIHandlerFermenter;
+import forestry.factory.recipes.nei.NEIHandlerMoistener;
+import forestry.factory.recipes.nei.NEIHandlerSqueezer;
+import forestry.factory.recipes.nei.NEIHandlerStill;
 
 @ParametersAreNonnullByDefault
 public class Forestry implements IAdapter {
