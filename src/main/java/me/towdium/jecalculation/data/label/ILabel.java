@@ -487,7 +487,7 @@ public interface ILabel {
             return (int) (amount ^ (percent ? 1 : 0));
         }
 
-        protected static Merger.MergerFunction form(Class<?> a, Class<?> b, BiPredicate<ILabel, ILabel> p) {
+        public static Merger.MergerFunction form(Class<?> a, Class<?> b, BiPredicate<ILabel, ILabel> p) {
             return (c, d) -> {
                 if (a.isInstance(d) && b.isInstance(c)) {
                     ILabel tmp = c;
