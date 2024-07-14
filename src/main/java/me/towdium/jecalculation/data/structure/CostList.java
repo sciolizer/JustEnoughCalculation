@@ -242,10 +242,10 @@ public class CostList {
             List<ILabel> ret = procedure.stream()
                 .map(i -> i.two.labels.get(0))
                 .collect(Collectors.toList());
-            Collections.reverse(ret);
             CostList cl = new CostList(ret).multiply(-1);
             CostList temp = new CostList();
             temp.mergeInplace(cl, false);
+            Collections.reverse(temp.labels);
             return temp.labels;
         }
     }
