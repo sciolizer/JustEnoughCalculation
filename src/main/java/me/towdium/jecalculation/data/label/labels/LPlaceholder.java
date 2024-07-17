@@ -107,7 +107,8 @@ public class LPlaceholder extends ILabel.Impl {
     @Override
     @SideOnly(Side.CLIENT)
     public String getDisplayName() {
-        return Utilities.I18n.get("label.placeholder.name", name);
+        return name;
+//        return Utilities.I18n.get("label.placeholder.name", name);
     }
 
     @Override

@@ -99,6 +99,20 @@ public class CostListTest extends AbstractCostListTest {
 
         assertChatMessages(Arrays.asList(Utilities.ChatMessage.MAX_LOOP));
     }
+
+    @Test
+    void surplus() {
+        recipe(Arrays.asList(label("motor", 1)), Arrays.asList(label("crafting-table", 1)), Arrays.asList(label("iron-rod", 2), label("magnetic-iron-rod", 1)));
+        recipe(Arrays.asList(label("iron-rod", 64), label("iron-dust", 128)), Arrays.asList(label("lathe", 1)), Arrays.asList(label("iron-ingot", 64)));
+        recipe(Arrays.asList(label("magnetic-iron-rod", 64)), Arrays.asList(label("magnetizer", 1)), Arrays.asList(label("iron-rod", 64)));
+
+        request(label("motor", 1));
+
+        assertInputs(Arrays.asList(label("iron-ingot", 128)));
+        assertExcessOutputs(Arrays.asList(label("iron-rod", 62), label("iron-dust", 256), label("magnetic-iron-rod", 63)));
+        assertSteps(Arrays.asList());
+        assertCatalysts(Arrays.asList());
+    }
 }
 // todo: restore formatter
 // @formatter:on

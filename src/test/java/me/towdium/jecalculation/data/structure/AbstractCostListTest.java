@@ -79,17 +79,23 @@ public abstract class AbstractCostListTest {
 
     protected void assertExcessOutputs(List<ILabel> outputs) {
         List<ILabel> actualOutputs = calculator.getOutputs(inventory);
-        assert outputs.equals(actualOutputs);
+        if (!outputs.equals(actualOutputs)) {
+            throw new AssertionError("expectedOutputs = " + outputs + ", actualOutputs = " + actualOutputs);
+        }
     }
 
     protected void assertCatalysts(List<ILabel> catalysts) {
         List<ILabel> actualCatalysts = calculator.getCatalysts();
-        assert catalysts.equals(actualCatalysts);
+        if (!catalysts.equals(actualCatalysts)) {
+            throw new AssertionError("expectedCatalysts = " + catalysts + ", actualCatalysts = " + actualCatalysts);
+        }
     }
 
     protected void assertSteps(List<ILabel> steps) {
         List<ILabel> actualSteps = calculator.getSteps();
-        assert steps.equals(actualSteps);
+        if (!steps.equals(actualSteps)) {
+            throw new AssertionError("expectedSteps = " + steps + ", actualSteps = " + actualSteps);
+        }
     }
 
     protected void assertChatMessages(List<Utilities.ChatMessage> messages) {
