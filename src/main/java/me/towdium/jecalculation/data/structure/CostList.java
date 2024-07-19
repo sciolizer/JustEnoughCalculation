@@ -160,6 +160,8 @@ public class CostList {
 
         CostList current; // inputs are negative, excess outputs are positive
 
+        Set<Recipe> usedRecipes = new HashSet<>();
+
         // There's a lot going on here, but the core idea is very simple:
         // 1. Build a dependency (directed acyclic) graph.
         // 2. Topologically sort it.
@@ -244,7 +246,8 @@ public class CostList {
                     NEEDED_LOOP:
                     while (true) {
                         for (ILabel needed : needer.needed.getLabels()) {
-                            Iterable<Node> candidateProviders = skipAncestors(undepletedNodes, needer);
+                            Set<Node> ancestors = getAncestors(needer);
+                            Iterable<Node> candidateProviders = () -> undepletedNodes.stream().filter(n -> !ancestors.contains(n)).iterator();
                             // 1. Is there an existing node that has at least 1 item in excess?
                             for (Node candidateProvider : candidateProviders) {
                                 for (ILabel excess : candidateProvider.excess.getLabels()) {
@@ -381,12 +384,27 @@ public class CostList {
         }
 
         private Node createNodeFor(ILabel needed) {
-            Iterator<Recipe> iterator = recipeIteratorProvider.recipeIterator();
-            while (iterator.hasNext()) {
-                Recipe r = iterator.next();
-                if (r.matches(needed)
-                    .isPresent()) {
-                    return new RecipeNode(r, r.multiplier(needed));
+            // Prioritize unused recipes, to minimize the chance of creating an infinite crafting loop.
+            {
+                Iterator<Recipe> iterator = recipeIteratorProvider.recipeIterator();
+                while (iterator.hasNext()) {
+                    Recipe r = iterator.next();
+                    if (!usedRecipes.contains(r) && r.matches(needed)
+                        .isPresent()) {
+                        usedRecipes.add(r);
+                        return new RecipeNode(r, r.multiplier(needed));
+                    }
+                }
+            }
+            // Otherwise fallback to creating a duplicate recipe node.
+            {
+                Iterator<Recipe> iterator = recipeIteratorProvider.recipeIterator();
+                while (iterator.hasNext()) {
+                    Recipe r = iterator.next();
+                    if (r.matches(needed)
+                        .isPresent()) {
+                        return new RecipeNode(r, r.multiplier(needed));
+                    }
                 }
             }
             return new InputNode(needed);
@@ -440,7 +458,7 @@ public class CostList {
             return steps;
         }
 
-        private Iterable<Node> skipAncestors(List<Node> dependencyGraph, Node node) {
+        private Set<Node> getAncestors(Node node) {
             Set<Node> ancestors = new HashSet<>();
             Queue<Node> frontier = new LinkedList<>();
             frontier.offer(node);
@@ -453,7 +471,7 @@ public class CostList {
                     }
                 }
             }
-            return () -> dependencyGraph.stream().filter(n -> !ancestors.contains(n)).iterator();
+            return ancestors;
         }
 
         private void attach(Node parent, Node child, ILabel transfer) {

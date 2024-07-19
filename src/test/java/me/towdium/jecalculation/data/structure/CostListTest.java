@@ -101,6 +101,24 @@ public class CostListTest extends AbstractCostListTest {
     }
 
     @Test
+    void escapeTheLoop() {
+        // a test like the infinite loop, but where there's a second option for crafting cobblestone that would break the loop
+        recipe(Arrays.asList(label("stone", 1)), Arrays.asList(label("furnace", 1)), Arrays.asList(label("cobblestone", 1)));
+        recipe(Arrays.asList(label("cobblestone", 1)), Arrays.asList(label("hammer", 1)), Arrays.asList(label("stone", 1)));
+        recipe(Arrays.asList(label("cobblestone", 9)), Arrays.asList(label("crafting-table", 1)), Arrays.asList(label("compressed-cobblestone", 1)));
+        request(label("cobblestone", 1));
+
+        assertInputs(Arrays.asList(label("compressed-cobblestone", 1)));
+        assertExcessOutputs(Arrays.asList(label("cobblestone", 8)));
+        assertCatalysts(Arrays.asList(label("crafting-table", 1), label("furnace", 1), label("hammer", 1)));
+
+        // This is of course not ideal, since it would be best to skip stone entirely, but it's better than making an infinite loop.
+        assertSteps(Arrays.asList(label("cobblestone", 9), label("stone", 1), label("cobblestone", 1)));
+
+        assertChatMessages(Arrays.asList());
+    }
+
+    @Test
     void surplus() {
         recipe(Arrays.asList(label("motor", 1)), Arrays.asList(label("crafting-table", 1)), Arrays.asList(label("iron-rod", 2), label("magnetic-iron-rod", 1)));
         recipe(Arrays.asList(label("iron-rod", 64), label("iron-dust", 128)), Arrays.asList(label("lathe", 1)), Arrays.asList(label("iron-ingot", 64)));
@@ -112,12 +130,6 @@ public class CostListTest extends AbstractCostListTest {
         assertExcessOutputs(Arrays.asList(label("iron-dust", 256), label("iron-rod", 62), label("magnetic-iron-rod", 63)));
         assertCatalysts(Arrays.asList(label("lathe", 1), label("magnetizer", 1), label("crafting-table", 1)));
         assertSteps(Arrays.asList(label("iron-rod", 128), label("magnetic-iron-rod", 64), label("motor", 1)));
-    }
-
-    @Test
-    void escapeTheLoop() {
-        // a test like the infinite loop, but where there's a second option for crafting stone that would break the loop
-        throw new RuntimeException("not implemented");
     }
 }
 // todo: restore formatter
