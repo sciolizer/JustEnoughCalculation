@@ -109,9 +109,15 @@ public class CostListTest extends AbstractCostListTest {
         request(label("motor", 1));
 
         assertInputs(Arrays.asList(label("iron-ingot", 128)));
-        assertExcessOutputs(Arrays.asList(label("iron-rod", 62), label("iron-dust", 256), label("magnetic-iron-rod", 63)));
-        assertSteps(Arrays.asList());
-        assertCatalysts(Arrays.asList());
+        assertExcessOutputs(Arrays.asList(label("iron-dust", 256), label("iron-rod", 62), label("magnetic-iron-rod", 63)));
+        assertCatalysts(Arrays.asList(label("lathe", 1), label("magnetizer", 1), label("crafting-table", 1)));
+        assertSteps(Arrays.asList(label("iron-rod", 128), label("magnetic-iron-rod", 64), label("motor", 1)));
+    }
+
+    @Test
+    void escapeTheLoop() {
+        // a test like the infinite loop, but where there's a second option for crafting stone that would break the loop
+        throw new RuntimeException("not implemented");
     }
 }
 // todo: restore formatter

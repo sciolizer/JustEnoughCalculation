@@ -267,9 +267,6 @@ public class CostList {
                                         frontier.offer(candidateProvider);
                                     }
                                     attach(needer, candidateProvider, needed);
-                                    if (candidateProvider.isDepleted()) {
-                                        undepletedNodes.remove(candidateProvider);
-                                    }
                                     logger.info("Calculator::new(): after drawing excess, needer = " + needer + ", provider = " + candidateProvider);
                                     continue NEEDED_LOOP;
                                 }
@@ -280,8 +277,8 @@ public class CostList {
                             frontier.offer(provider);
                             dependencyGraph.add(provider);
                             attach(needer, provider, needed);
-                            if (provider.isDepleted()) {
-                                undepletedNodes.remove(provider);
+                            if (!provider.isDepleted()) {
+                                undepletedNodes.add(provider);
                             }
                             logger.info("Calculator::new(): after creating new node, needer = " + needer + ", provider = " + provider);
                             continue NEEDED_LOOP;
@@ -474,9 +471,9 @@ public class CostList {
         // todo: check if we actually need both of these, children and parents
         // it's possible one of them can just be changed to a count?
         private final Set<Node> children = new HashSet<>();
-        private final Set<Node> parents = new HashSet<>();
+        private final Set<Node> parents = new HashSet<>(); // todo: rename to children, and children to parents
 
-        private final CostList needed;
+        final CostList needed;
         final CostList excess;
 
         private Node(CostList needed, CostList excess) {
@@ -546,6 +543,12 @@ public class CostList {
         }
 
         @Override
+        boolean isDepleted() {
+            // A recipe node can always increase its multiplier, and so is never depleted.
+            return false;
+        }
+
+        @Override
         CostList simulateInventory(CostList simulatedInventory) {
             CostList ret = CostList.merge(simulatedInventory, CostList.negative(recipe.getInput()).multiply(multiplier), false);
             ret.mergeInplace(CostList.positive(recipe.getOutput()).multiply(multiplier), false);
@@ -556,10 +559,12 @@ public class CostList {
         boolean dialUpFor(ILabel needed) {
             for (ILabel output : recipe.getOutput()) {
                 if (needed.matches(output)) {
+                    // todo: assert that excess is empty? (at least while testing)
                     long extraMultiplier = recipe.multiplier(needed);
                     logger.info("RecipeNode::dialUpFor(): this = " + this + ", needed = " + needed + ", extraMultiplier = " + extraMultiplier);
                     this.multiplier += extraMultiplier;
                     this.excess.mergeInplace(CostList.positive(recipe.getOutput()).multiply(extraMultiplier), false);
+                    this.needed.mergeInplace(CostList.positive(recipe.getInput()).multiply(extraMultiplier), false);
                     logger.info("RecipeNode::dialUpFor(): after change, this = " + this);
                     return true;
                 }
@@ -593,6 +598,12 @@ public class CostList {
         private InputNode(ILabel label) {
             super(new CostList(), CostList.positive(Collections.singletonList(label)));
             this.label = label;
+        }
+
+        @Override
+        boolean isDepleted() {
+            // label.amount can just be increased, so this is never depleted.
+            return false;
         }
 
         @Override
@@ -668,4 +679,5 @@ public class CostList {
     }
 }
 // todo: restore formatter
+
 // @formatter:on
