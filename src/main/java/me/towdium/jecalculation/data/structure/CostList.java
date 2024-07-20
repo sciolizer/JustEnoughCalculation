@@ -384,13 +384,20 @@ public class CostList {
         }
 
         private Node createNodeFor(ILabel needed) {
+            ILabel neededNegative = needed.copy().multiply(-1); // fuzzy merges (such as an ore dict with an item stack) require the two to have opposite signs
             // Prioritize unused recipes, to minimize the chance of creating an infinite crafting loop.
             {
                 Iterator<Recipe> iterator = recipeIteratorProvider.recipeIterator();
                 while (iterator.hasNext()) {
                     Recipe r = iterator.next();
-                    if (!usedRecipes.contains(r) && r.matches(needed)
-                        .isPresent()) {
+                    boolean matches = r.matches(neededNegative)
+                        .isPresent();
+                    if (matches) {
+                        logger.info("Calculator::createNodeFor(): needed = " + needed + ", match = " + r);
+                    } else {
+                        logger.info("Calculator::createNodeFor(): needed = " + needed + ", !match = " + r);
+                    }
+                    if (!usedRecipes.contains(r) && matches) {
                         usedRecipes.add(r);
                         return new RecipeNode(r, r.multiplier(needed));
                     }
@@ -401,7 +408,7 @@ public class CostList {
                 Iterator<Recipe> iterator = recipeIteratorProvider.recipeIterator();
                 while (iterator.hasNext()) {
                     Recipe r = iterator.next();
-                    if (r.matches(needed)
+                    if (r.matches(neededNegative)
                         .isPresent()) {
                         return new RecipeNode(r, r.multiplier(needed));
                     }

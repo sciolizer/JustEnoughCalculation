@@ -3,6 +3,9 @@ package me.towdium.jecalculation.data.structure;
 import java.util.Arrays;
 import java.util.Collections;
 
+import me.towdium.jecalculation.data.label.ILabel;
+import me.towdium.jecalculation.data.label.labels.LItemStack;
+import me.towdium.jecalculation.data.label.labels.LOreDict;
 import org.junit.jupiter.api.Test;
 
 import me.towdium.jecalculation.utils.Utilities;
@@ -130,6 +133,14 @@ public class CostListTest extends AbstractCostListTest {
         assertExcessOutputs(Arrays.asList(label("iron-dust", 256), label("iron-rod", 62), label("magnetic-iron-rod", 63)));
         assertCatalysts(Arrays.asList(label("lathe", 1), label("magnetizer", 1), label("crafting-table", 1)));
         assertSteps(Arrays.asList(label("iron-rod", 128), label("magnetic-iron-rod", 64), label("motor", 1)));
+    }
+
+    @Test
+    void sticks() {
+        // sticks from plankWood, fulfill plankWood by making oak planks from oak wood
+        ILabel plankWood = label("plankWood", 1);
+        oreDict("plankWood", plankWood);
+        recipe(Arrays.asList(label("stick"), ))
     }
 }
 // todo: restore formatter

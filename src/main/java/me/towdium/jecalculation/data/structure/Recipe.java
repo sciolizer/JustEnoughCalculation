@@ -153,6 +153,13 @@ public class Recipe {
             .findAny();
     }
 
+    @Override
+    public String toString() {
+        return "Recipe{" +
+            "output=" + (output.size() == 0 ? "{}" : output.get(0)) +
+            '}';
+    }
+
     public long multiplier(ILabel label) {
         return output.stream()
             .filter(

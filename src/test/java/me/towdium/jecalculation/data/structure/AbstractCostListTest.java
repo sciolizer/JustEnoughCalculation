@@ -1,15 +1,16 @@
 package me.towdium.jecalculation.data.structure;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiPredicate;
 
+import me.towdium.jecalculation.data.label.labels.LItemStack;
+import me.towdium.jecalculation.data.label.labels.LOreDict;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Locale;
 
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.oredict.OreDictionary;
 import org.junit.jupiter.api.BeforeEach;
 
 import me.towdium.jecalculation.data.label.ILabel;
@@ -25,6 +26,8 @@ public abstract class AbstractCostListTest {
     private List<Recipe> recipes = new ArrayList<>();
 
     private List<Utilities.ChatMessage> chatMessages = new ArrayList<>(1);
+
+    private Map<String,List<LPlaceholder>> oreDict = new HashMap<>();
 
     @BeforeEach
     void setUp() throws Exception {
@@ -50,10 +53,33 @@ public abstract class AbstractCostListTest {
                 "placeholder",
                 "placeholder",
                 ILabel.Impl.form(LPlaceholder.class, LPlaceholder.class, LPlaceholder::merge));
+        ILabel.MERGER.register("oreDict", "placeholder", ILabel.Impl.form(LOreDict.class, LPlaceholder.class, new BiPredicate<ILabel, ILabel>() {
+            @Override
+            public boolean test(ILabel a, ILabel b) {
+                if (a instanceof LOreDict && b instanceof LPlaceholder) {
+                    LOreDict lod = (LOreDict) a;
+                    LPlaceholder lis = (LPlaceholder) b;
+                    // TODO check performance
+                    if (lod.getAmount() * lis.getAmount() < 0) {
+                        for (LPlaceholder placeholder : oreDict.get(lod.getName())) {
+                            if (placeholder.matches(lis)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        }));
     }
 
     protected ILabel label(String name, int count) {
         return new LPlaceholder(name, count);
+    }
+
+    protected void oreDict(String name, ILabel placeholder) {
+        LPlaceholder ph = (LPlaceholder) placeholder;
+        oreDict.computeIfAbsent(name, (n) -> new ArrayList<>(1)).add(ph);
     }
 
     protected void inventory(List<ILabel> inventory) {

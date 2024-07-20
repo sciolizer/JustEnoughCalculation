@@ -66,6 +66,12 @@ public class LOreDict extends ILabel.Impl {
         } else return false;
     }
 
+//    public static OreDictItemMatcher oreDictItemMatcher = new OreDictItemMatcher() {
+//        public boolean dictContains(ILabel a, ILabel b) {
+//
+//        }
+//    };
+
     public static boolean mergeFuzzy(ILabel a, ILabel b) {
         if (a instanceof LOreDict && b instanceof LItemStack) {
             LOreDict lod = (LOreDict) a;
@@ -215,4 +221,10 @@ public class LOreDict extends ILabel.Impl {
     public String getName() {
         return name;
     }
+
+//    // Indirection for unit test
+//
+//    public interface OreDictItemMatcher {
+//        boolean stackBelongsToOre(LItemStack stack, String oreDictName);
+//    }
 }
