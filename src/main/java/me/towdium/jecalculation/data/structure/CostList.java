@@ -399,7 +399,7 @@ public class CostList {
                     }
                     if (!usedRecipes.contains(r) && matches) {
                         usedRecipes.add(r);
-                        return new RecipeNode(r, r.multiplier(needed));
+                        return new RecipeNode(r, r.multiplier(neededNegative));
                     }
                 }
             }
@@ -410,7 +410,7 @@ public class CostList {
                     Recipe r = iterator.next();
                     if (r.matches(neededNegative)
                         .isPresent()) {
-                        return new RecipeNode(r, r.multiplier(needed));
+                        return new RecipeNode(r, r.multiplier(neededNegative));
                     }
                 }
             }

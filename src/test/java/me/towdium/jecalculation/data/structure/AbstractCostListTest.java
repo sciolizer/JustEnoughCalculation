@@ -50,6 +50,7 @@ public abstract class AbstractCostListTest {
                 "placeholder",
                 "placeholder",
                 ILabel.Impl.form(LPlaceholder.class, LPlaceholder.class, LPlaceholder::merge));
+        ILabel.MERGER.register("oreDict", "oreDict", ILabel.Impl.form(LOreDict.class, LOreDict.class, LOreDict::mergeSame));
         ILabel.MERGER.register("oreDict", "placeholder", ILabel.Impl.form(LOreDict.class, LPlaceholder.class, new BiPredicate<ILabel, ILabel>() {
             @Override
             public boolean test(ILabel a, ILabel b) {

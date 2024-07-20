@@ -137,16 +137,16 @@ public class CostListTest extends AbstractCostListTest {
     @Test
     void sticks() {
         // sticks from plankWood, fulfill plankWood by making oak planks from oak wood
-        registerOreDict("plankWood", placeholder("plankWood", 1));
+        registerOreDict("plankWood", placeholder("oak-wood-planks", 1));
         recipe(Arrays.asList(placeholder("stick", 4)), Arrays.asList(placeholder("crafting-table", 1)), Arrays.asList(oreDict("plankWood", 2)));
         recipe(Arrays.asList(placeholder("oak-wood-planks", 4)), Arrays.asList(placeholder("crafting-table", 1)), Arrays.asList(placeholder("oak-wood", 1)));
 
         request(placeholder("stick", 1));
 
-        assertSteps(Arrays.asList());
-        assertInputs(Arrays.asList());
-        assertExcessOutputs(Arrays.asList(placeholder("stick", 3)));
-        assertCatalysts(Arrays.asList());
+        assertInputs(Arrays.asList(placeholder("oak-wood", 1)));
+        assertExcessOutputs(Arrays.asList(placeholder("oak-wood-planks", 2), placeholder("stick", 3)));
+        assertCatalysts(Arrays.asList(placeholder("crafting-table", 1)));
+        assertSteps(Arrays.asList(placeholder("oak-wood-planks", 4), placeholder("stick", 4)));
     }
 }
 // todo: restore formatter

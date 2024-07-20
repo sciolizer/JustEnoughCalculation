@@ -173,7 +173,8 @@ public class LOreDict extends ILabel.Impl {
     @Override
     @SideOnly(Side.CLIENT)
     public String getDisplayName() {
-        return Utilities.I18n.get("label.ore_dict.name", name);
+        return name;
+//        return Utilities.I18n.get("label.ore_dict.name", name);
     }
 
     @Override
