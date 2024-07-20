@@ -4,13 +4,10 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiPredicate;
 
-import me.towdium.jecalculation.data.label.labels.LItemStack;
 import me.towdium.jecalculation.data.label.labels.LOreDict;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Locale;
 
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.oredict.OreDictionary;
 import org.junit.jupiter.api.BeforeEach;
 
 import me.towdium.jecalculation.data.label.ILabel;
@@ -73,13 +70,16 @@ public abstract class AbstractCostListTest {
         }));
     }
 
-    protected ILabel label(String name, int count) {
+    protected LPlaceholder placeholder(String name, int count) {
         return new LPlaceholder(name, count);
     }
 
-    protected void oreDict(String name, ILabel placeholder) {
-        LPlaceholder ph = (LPlaceholder) placeholder;
-        oreDict.computeIfAbsent(name, (n) -> new ArrayList<>(1)).add(ph);
+    protected LOreDict oreDict(String name, int count) {
+        return new LOreDict(name, count);
+    }
+
+    protected void registerOreDict(String name, LPlaceholder placeholder) {
+        oreDict.computeIfAbsent(name, (n) -> new ArrayList<>(1)).add(placeholder);
     }
 
     protected void inventory(List<ILabel> inventory) {
