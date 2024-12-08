@@ -1,5 +1,6 @@
 package me.towdium.jecalculation.data.structure;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface Calculation<LabelT> {
@@ -10,5 +11,9 @@ public interface Calculation<LabelT> {
 
     List<LabelT> getOutputs(List<LabelT> ignore);
 
-    List<LabelT> getSteps();
+    default List<LabelT> getSteps() {
+        return getSteps(Collections.emptyList());
+    }
+
+    List<LabelT> getSteps(List<LabelT> startingInventory);
 }
