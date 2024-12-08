@@ -194,7 +194,7 @@ public class GuiCraft extends Gui {
                     result.setLabels(calculator.getCatalysts());
                     break;
                 case STEPS:
-                    result.setLabels(calculator.getSteps());
+                    result.setLabels(calculator.getSteps(getInventory()));
                     break;
             }
         }

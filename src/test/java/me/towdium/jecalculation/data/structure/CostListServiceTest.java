@@ -90,8 +90,43 @@ public class CostListServiceTest extends AbstractCostListServiceTest {
         assertSteps(lbl("iron-rod", 128), lbl("magnetic-iron-rod", 64), lbl("motor"));
     }
 
+    // The next two tests demonstrate the problem with trying to merge repeated crafting steps in a naive
+    // post-processing step. If the steps are merged in one direction, one of the tests fails. If the steps are merged
+    // in the other direction, the other test fails.
+
+    @Test
+    void wiresAndCables1() {
+        recipe(lst(lbl("superWireAndCable")), WORKBENCH, lst(lbl("cable"), lbl("wire")));
+        recipe(lst(lbl("wire", 2)), WORKBENCH, lst(lbl("tin-ingot")));
+        recipe(lst(lbl("cable")), WORKBENCH, lst(lbl("wire")));
+
+        request(lbl("superWireAndCable"));
+
+        assertInputs(lbl("tin-ingot", 1));
+        assertExcessOutputs();
+        assertCatalysts(WORKBENCH);
+        assertSteps(lbl("wire", 2), lbl("cable"), lbl("superWireAndCable"));
+    }
+
+    @Test
+    void wiresAndCables2() {
+        recipe(lst(lbl("tv")), WORKBENCH, lst(lbl("cable"), lbl("antenna")));
+        recipe(lst(lbl("cable")), WORKBENCH, lst(lbl("wire")));
+        recipe(lst(lbl("wire", 2)), WORKBENCH, lst(lbl("tin-ingot")));
+        recipe(lst(lbl("antenna")), WORKBENCH, lst(lbl("cable")));
+
+        request(lbl("tv"));
+
+        assertInputs(lbl("tin-ingot", 1));
+        assertExcessOutputs();
+        assertCatalysts(WORKBENCH);
+
+        // Cables are made from wires, not the other way around, so it is important that wires appear before cables.
+        assertSteps(lbl("wire", 2), lbl("cable", 2), lbl("antenna"), lbl("tv"));
+    }
 
     private static List<TestLbl> WORKBENCH = lst(lbl("crafting-table"));
+
     private static <T> List<T> lst(T... args) {
         return Arrays.asList(args);
     }
