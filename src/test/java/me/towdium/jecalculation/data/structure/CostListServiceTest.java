@@ -64,6 +64,37 @@ public class CostListServiceTest extends AbstractCostListServiceTest {
     }
 
     @Test
+    void minimalInventory1() {
+        // This request requires 14 iron blocks and 1000 stone.
+        // We should make the iron blocks before making the stone, to minimize the amount of inventory space we take up.
+        recipe(lst(lbl("iron-block")), WORKBENCH, lst(lbl("iron-ingot", 9)));
+        recipe(lst(lbl("stone")), lst(lbl("furnace")), lst(lbl("cobblestone")));
+        recipe(lst(lbl("mega-block")), lst(), lst(lbl("stone", 1000), lbl("iron-block", 14)));
+        request(lbl("mega-block"));
+
+        assertInputs(lbl("cobblestone", 1000), lbl("iron-ingot", 126));
+        assertExcessOutputs();
+        assertCatalysts(lbl("furnace"), lbl("crafting-table"));
+        assertSteps(lbl("iron-block", 14), lbl("stone", 1000), lbl("mega-block"));
+    }
+
+    @Test
+    void minimalInventory2() {
+        // Identical to minimalInventory1, except that the mega-block recipe requests iron-blocks before stone. The
+        // Calculator should choose to make stone before iron-blocks regardless
+        // of which order they are specified in the recipe.
+        recipe(lst(lbl("iron-block")), WORKBENCH, lst(lbl("iron-ingot", 9)));
+        recipe(lst(lbl("stone")), lst(lbl("furnace")), lst(lbl("cobblestone")));
+        recipe(lst(lbl("mega-block")), lst(), lst(lbl("iron-block", 14), lbl("stone", 1000)));
+        request(lbl("mega-block"));
+
+        assertInputs(lbl("iron-ingot", 126), lbl("cobblestone", 1000));
+        assertExcessOutputs();
+        assertCatalysts(lbl("crafting-table"), lbl("furnace"));
+        assertSteps(lbl("iron-block", 14), lbl("stone", 1000), lbl("mega-block"));
+    }
+
+    @Test
     void basicLoop() {
         recipe(lst(lbl("stone")), lst(lbl("furnace")), lst(lbl("cobblestone")));
         recipe(lst(lbl("cobblestone")), lst(lbl("hammer")), lst(lbl("stone")));
