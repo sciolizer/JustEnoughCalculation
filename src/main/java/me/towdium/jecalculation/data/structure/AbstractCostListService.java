@@ -144,102 +144,98 @@ public abstract class AbstractCostListService<LabelT, RecipeT, CostListT> {
             }
 
             @Override
-            public List<LabelT> getSteps(List<LabelT> startingInventory) {
-                startingInventory = new ArrayList<>(startingInventory);
-                startingInventory.addAll(getInputs());
-
-                // First we run a simulated inventory through the procedure backwards, but also look for opportunities
-                // to combine multiple steps with the same recipe into a single step. We do not pick (or merge) steps
-                // that would cause the user to have a negative amount of items in their inventory. Our search for merge
-                // opportunities is greedy, so it is possible to get stuck in a corner, in which case we fall back to
-                // the simpler solution below. This algorithm is quadratic in the worst case (like the fallback), but is
-                // close to linear for most realistic inputs.
+            public List<LabelT> getSteps(List<LabelT> givenInventory) {
+                // First we try running a simulated inventory through the procedure backwards, greedily preferring steps
+                // that keep a small inventory, although we prohibit steps that are impossible and merge steps that use
+                // identical recipes whenever possible. There's no backtracking, so it's posssible to get stuck in a
+                // corner, in which case we fall back to the simpler solution below. As long as the number of labels in
+                // the simulated inventory stays relatively bounded, this algorithm is close to quadratic (like the
+                // fallback). It could in theory bump up to cubic if there were lots of excess outputs of many distinct
+                // labels, but that doesn't seem to be a problem in practice.
                 {
+                    List<LabelT> startingInventory = new ArrayList<>(givenInventory);
+                    startingInventory.addAll(getInputs());
+
                     CostListT inventory = costLists.newCostList(startingInventory);
-                    LinkedList<ProcedureStep> queue = new LinkedList<>(procedure);
+                    List<ProcedureStep> remainingProcedureSteps = new ArrayList<>(procedure);
+                    List<Pair<RecipeT, Long>> optimizedSteps = new ArrayList<>();
 
-                    // When this counts down to 0 for a recipe, then we know we can terminate the inner loop early.
-                    // Since this is going to start out as 1 for most recipes, we almost never have to search backwards,
-                    // and so this algorithm is closer to linear than quadratic.
-                    Map<RecipeT, Integer> numStepsStillUsingRecipe = new HashMap<>();
-                    for (ProcedureStep step : queue) {
-                        numStepsStillUsingRecipe.put(step.recipe, 1 + numStepsStillUsingRecipe.computeIfAbsent(step.recipe, (k) -> 0));
-                    }
-
-                    List<Pair<RecipeT, Long>> ret = new ArrayList<>();
-
-                    class Remover {
-                        Optional<CostListT> tryApplyingToInventoryAndRemoveIfAllPositive(Iterator<ProcedureStep> iterator, ProcedureStep step, CostListT inventory) {
-                            CostListT candidateInventory = mergeCostLists(inventory, recipeAsCostList(step.recipe, step.multiplier), false);
+                    while (!remainingProcedureSteps.isEmpty()) {
+                        final RecipeT preferredRecipe = optimizedSteps.isEmpty() ? null
+                            : optimizedSteps.get(optimizedSteps.size() - 1).one;
+                        Integer indexOfBestStep = null;
+                        CostListT inventoryAfterBestStep = null;
+                        int sizeOfInventoryAfterBestStep = Integer.MAX_VALUE;
+                        for (int i = remainingProcedureSteps.size() - 1; i >= 0; i--) {
+                            ProcedureStep step = remainingProcedureSteps.get(i);
+                            CostListT candidateInventory = mergeCostLists(
+                                inventory,
+                                recipeAsCostList(step.recipe, step.multiplier),
+                                false);
                             if (!isAllPositive(candidateInventory)) {
-                                return Optional.empty();
+                                // Don't give the user an impossible plan.
+                                continue;
                             }
-                            iterator.remove();
-                            numStepsStillUsingRecipe.put(step.recipe, numStepsStillUsingRecipe.get(step.recipe) - 1);
-                            return Optional.of(candidateInventory);
+                            int inventorySize = estimatedNumSlotsTakenBy(candidateInventory);
+                            if (indexOfBestStep == null) {
+                                // First encounter of an option with a non-negative inventory
+                                indexOfBestStep = i;
+                                inventoryAfterBestStep = candidateInventory;
+                                sizeOfInventoryAfterBestStep = inventorySize;
+                                continue;
+                            }
+                            ProcedureStep bestStep = remainingProcedureSteps.get(indexOfBestStep);
+                            if (step.recipe.equals(preferredRecipe) && !bestStep.recipe.equals(preferredRecipe)) {
+                                // First encounter of an option that uses the same recipe as our most recent step; stop
+                                // here
+                                indexOfBestStep = i;
+                                inventoryAfterBestStep = candidateInventory;
+                                break;
+                            }
+                            if (inventorySize < sizeOfInventoryAfterBestStep) {
+                                // No matching recipe found yet, but this step gives the smallest inventory
+                                indexOfBestStep = i;
+                                inventoryAfterBestStep = candidateInventory;
+                                sizeOfInventoryAfterBestStep = inventorySize;
+                            }
+                        }
+                        if (indexOfBestStep == null) {
+                            // Stuck in a corner; give up
+                            optimizedSteps = null;
+                            break;
                         }
 
-                        private CostListT recipeAsCostList(RecipeT recipe, long multiplier) {
-                            // todo: unify with above
-                            List<LabelT> outL = d.getRecipeOutput(recipe)
+                        // Removal is linear time in the worst case, but
+                        // 1. Java's LinkedList would require a re-traversal anyway
+                        // 2. Most of the time, indexOfBestStep will be near the end.
+                        // 3. Array copies are fast.
+                        // 4. We just finished a linear scan, so this doesn't worsen our complexity.
+                        ProcedureStep bestStep = remainingProcedureSteps.remove((int) indexOfBestStep);
+
+                        inventory = inventoryAfterBestStep;
+                        if (!optimizedSteps.isEmpty() && bestStep.recipe.equals(preferredRecipe)) {
+                            // merge with previous step
+                            Pair<RecipeT, Long> latest = optimizedSteps.get(optimizedSteps.size() - 1);
+                            latest.two = latest.two + bestStep.multiplier;
+                        } else {
+                            // add new step
+                            optimizedSteps.add(new Pair<>(bestStep.recipe, bestStep.multiplier));
+                        }
+                    }
+                    if (optimizedSteps != null) {
+                        List<LabelT> retLabels = new ArrayList<>(optimizedSteps.size());
+                        for (Pair<RecipeT, Long> pair : optimizedSteps) {
+                            List<LabelT> outL = d.getRecipeOutput(pair.one)
                                 .stream()
                                 .filter(d::isNotEmptyLabel)
                                 .collect(Collectors.toList());
-                            CostListT outC = newNegatedCostList(outL);
-                            multiply(outC, -multiplier);
-                            List<LabelT> inL = d.getRecipeInput(recipe)
-                                .stream()
-                                .filter(d::isNotEmptyLabel)
-                                .collect(Collectors.toList());
-                            CostListT inC = newNegatedCostList(inL);
-                            multiply(inC, multiplier);
-                            return mergeCostLists(inC, outC, false);
-                        }
-                    }
-                    Remover remover = new Remover();
-
-                    dequeuing:
-                    while (!queue.isEmpty()) {
-                        if (!ret.isEmpty()) {
-                            Pair<RecipeT, Long> mostRecent = ret.get(ret.size() - 1);
-                            int numOfMostRecentRecipe = numStepsStillUsingRecipe.get(mostRecent.one);
-                            if (numOfMostRecentRecipe > 0) {
-                                for (Iterator<ProcedureStep> iterator = queue.descendingIterator(); iterator.hasNext(); ) {
-                                    ProcedureStep step = iterator.next();
-                                    if (step.recipe.equals(mostRecent.one)) {
-                                        Optional<CostListT> inv = remover.tryApplyingToInventoryAndRemoveIfAllPositive(iterator, step, inventory);
-                                        if (inv.isPresent()) {
-                                            inventory = inv.get();
-                                            mostRecent.two = mostRecent.two + step.multiplier;
-                                            continue dequeuing;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // either we just started, or the latest has no (usable) duplicates remaining, so just try from the most recent ones
-                        for (Iterator<ProcedureStep> iterator = queue.descendingIterator(); iterator.hasNext(); ) {
-                            ProcedureStep step = iterator.next();
-                            Optional<CostListT> inv = remover.tryApplyingToInventoryAndRemoveIfAllPositive(iterator, step, inventory);
-                            if (inv.isPresent()) {
-                                inventory = inv.get();
-                                ret.add(new Pair<>(step.recipe, step.multiplier));
-                                continue dequeuing;
-                            }
-                        }
-                        // Stuck in a corner; give up
-                        ret = null;
-                        break;
-                    }
-                    if (ret != null) {
-                        List<LabelT> rete = new ArrayList<>(ret.size());
-                        for (Pair<RecipeT, Long> pair : ret) {
-                            List<LabelT> outL = d.getRecipeOutput(pair.one).stream().filter(d::isNotEmptyLabel).collect(Collectors.toList());
                             CostListT outC = newNegatedCostList(outL);
                             multiply(outC, -pair.two);
-                            rete.add(costLists.getLabels(outC).get(0));
+                            retLabels.add(
+                                costLists.getLabels(outC)
+                                    .get(0));
                         }
-                        return rete;
+                        return retLabels;
                     }
                 }
 
@@ -430,5 +426,31 @@ public abstract class AbstractCostListService<LabelT, RecipeT, CostListT> {
                 .map(d::copyLabel)
                 .collect(Collectors.toList()));
         return ret;
+    }
+
+    private CostListT recipeAsCostList(RecipeT recipe, long multiplier) {
+        // todo: unify with body of calculate()
+        List<LabelT> outL = d.getRecipeOutput(recipe)
+            .stream()
+            .filter(d::isNotEmptyLabel)
+            .collect(Collectors.toList());
+        CostListT outC = newNegatedCostList(outL);
+        multiply(outC, -multiplier);
+        List<LabelT> inL = d.getRecipeInput(recipe)
+            .stream()
+            .filter(d::isNotEmptyLabel)
+            .collect(Collectors.toList());
+        CostListT inC = newNegatedCostList(inL);
+        multiply(inC, multiplier);
+        return mergeCostLists(inC, outC, false);
+    }
+
+    private int estimatedNumSlotsTakenBy(CostListT costLisT) {
+        int total = 0;
+        for (LabelT label : costLists.getLabels(costLisT)) {
+            // Assuming 64 is not valid for snowballs and unstackables, but good enough for an estimate
+            total += (int) Math.ceil(d.getLabelAmount(label) / 64.0);
+        }
+        return total;
     }
 }
