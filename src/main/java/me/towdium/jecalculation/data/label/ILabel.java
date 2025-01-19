@@ -284,6 +284,7 @@ public interface ILabel {
                 if (isGregTechLargeFluidContainer(itemStack)) {
                     FluidStack fluidStack = GTUtility.getFluidForFilledItem(itemStack, true);
                     if (fluidStack != null) {
+                        fluidStack.amount = fluidStack.amount * itemStack.stackSize;
                         return new LFluidStack(fluidStack);
                     }
                 }
